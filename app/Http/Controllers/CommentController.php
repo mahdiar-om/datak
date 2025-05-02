@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\ElasticsearchService;
+use App\Services\NotificationService;
 
 class CommentController extends Controller
 {
@@ -19,6 +20,7 @@ class CommentController extends Controller
         $data = $request->only(['post_id', 'user_id', 'text', 'created_at']);
         $result = $this->elasticsearch->create($data);
 
+        app(NotificationService::class)->checkAndNotify('comment', $data + ['id' => $result['id']]);
         return response()->json($result);
     }
 

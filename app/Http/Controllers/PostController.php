@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;               
 use App\Services\ElasticsearchService;
+use App\Services\NotificationService;
 
 class PostController extends Controller
 {
@@ -20,8 +21,9 @@ class PostController extends Controller
         $data = $request->only([
             'user_id', 'caption', 'media_url', 'created_at', 'updated_at'
         ]);
-
         $result = $this->elasticsearch->create($data);
+
+        app(NotificationService::class)->checkAndNotify('post', $data + ['id' => $result['id']]);
         return response()->json($result, 201);
     }
 
