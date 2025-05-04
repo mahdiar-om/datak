@@ -3,39 +3,30 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Validator;
 use App\Services\ElasticsearchService;
 use App\Services\NotificationService;
+use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
+use App\Traits\TimestampTrait;
 
 class PostController extends Controller
 {
     protected ElasticsearchService $elasticsearch;
+    use TimestampTrait;
 
     public function __construct()
     {
         $this->elasticsearch = new ElasticsearchService('posts');
     }
 
-    public function store(Request $request)
+    public function store(StorePostRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'user_id' => 'required|integer',
-            'caption' => 'required|string',
-            'media_url' => 'required|url',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $data = $validator->validated();
-        $data['created_at'] = Carbon::now()->toIso8601String();
-        $data['updated_at'] = Carbon::now()->toIso8601String();
+        $data = $request->validated();
+        $this->applyTimestamps($data);
 
         $result = $this->elasticsearch->create($data);
-
         app(NotificationService::class)->checkAndNotify('post', $data + ['id' => $result['id']]);
+
         return response()->json($result, 201);
     }
 
@@ -46,21 +37,13 @@ class PostController extends Controller
             response()->json(['message' => 'Post not found'], 404);
     }
 
-    public function update(Request $request, string $id)
+    public function update(UpdatePostRequest $request, string $id)
     {
-        $validator = Validator::make($request->all(), [
-            'caption' => 'nullable|string',
-            'media_url' => 'nullable|url',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $data = $validator->validated();
-        $data['updated_at'] = Carbon::now()->toIso8601String();
+        $data = $request->validated();
+        $this->applyTimestamps($data);
 
         $this->elasticsearch->update($id, $data);
+
         return response()->json(['message' => 'Post updated']);
     }
 
