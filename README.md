@@ -16,12 +16,17 @@
 
 2. **Create Environment File**
    ```bash
-   cp .env.example .env
+   cp .env.example laravel/.env
    ```
-   Open `.env` and ensure it contains:
+   * Open `.env` and add the Elasticsearch hostname:
    ```env
    ELASTICSEARCH_HOST=elastic
    ```
+   * * You can alternatively run this command:
+    ```bash
+    echo "ELASTICSEARCH_HOST=elastic" >> laravel/.env
+    ```
+   
    
 3. **Generate Application Key**
    ```bash
