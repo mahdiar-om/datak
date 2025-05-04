@@ -1,0 +1,11 @@
+FROM bitnami/laravel:latest
+
+COPY . /app
+
+WORKDIR /app
+
+RUN composer install
+
+EXPOSE 8000
+
+RUN php artisan serve
